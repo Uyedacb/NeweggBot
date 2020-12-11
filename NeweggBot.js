@@ -24,7 +24,7 @@ async function readLine() {
 
 	return new Promise(resolve => {
 
-			rl.question('close? ', (answer) => {
+			rl.question('continue? ', (answer) => {
 				rl.close();
 				resolve(answer)
 			});
@@ -75,6 +75,8 @@ async function run () {
 	}
 
 	await report("Logged in")
+	await report("Type in any characters and press enter to begin searching for GPUs")
+	await readLine();
 	await report("Checking for card")
 	var index = 0;
 	let continueTo = true;
@@ -86,18 +88,15 @@ async function run () {
 				page.waitForNavigation()
 			])
 			if (page.url().includes("shop/cart")) {
-				// add modal check
-				try {
-					await page.waitForSelector('#Popup_Masks', {timeout: 2000});
-					await page.click("#Popup_Masks button[class='close']");
-				} catch (err) {
-					report(err)
-				}
 				let titleSect = await page.$('#cart-top .row-title-note')
 				let numItems = await page.evaluate((el) => el.textContent, titleSect);
 				if (numItems.includes('0')) {
-					index++;
 					report("item not added");
+					index++;
+					if (index == config.item_number.length) {
+						index = 0;
+						report('restarting order')
+					}
 					continue
 				} else {
 					break;
@@ -108,9 +107,9 @@ async function run () {
 					page.goto('https://secure.newegg.com/shop/cart', { waitUntil: 'load' }),
 					page.waitForNavigation()
 				])
-				// add modal check
+				// add modal check (probably redundant as the checkout button is in the DOM even when the Modal is open)
 				try {
-					await page.waitForSelector('#Popup_Masks', {timeout: 2000});
+					await page.waitForSelector('#Popup_Masks', {timeout: 500});
 					await page.click("#Popup_Masks button[class='close']");
 				} catch (err) {
 					report(err)
