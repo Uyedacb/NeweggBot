@@ -7,7 +7,6 @@ const rl = readline.createInterface({
     input: process.stdin,
     output: process.stdout
 });
-var observer;
 rl.on("close", function() {
     console.log("\nBYE BYE !!!");
     process.exit(0);
@@ -17,35 +16,6 @@ async function report (log) {
 	currentTime = new Date();
 	console.log(currentTime.toString().split('G')[0] + ': ' + log)
 }
-
-async function check_cart (page) {
-	await page.waitForTimeout(250)
-	try {
-		await page.waitForSelector('span.amount' , { timeout: 1000 })
-		var element = await page.$('span.amount')
-		var text = await page.evaluate(element => element.textContent, element);
-		// checks if price exceeds limit
-		if (parseInt(text.split('$')[1]) > config.price_limit) {
-			await report("Price exceeds limit, removing from cart")
-			var button = await page.$$('button.btn.btn-mini');
-			while (true) {
-				try {
-					await button[1].click()
-				} catch (err) {
-					break
-				}
-			}
-			return false
-		}
-		await report("Card added to cart, attempting to purchase")
-		return true
-	} catch (err) {
-		await report("Card not in stock")
-		await page.waitForTimeout(config.refresh_time * 1000)
-		return false
-	}
-}
-
 async function readLine() {
 	const rl = readline.createInterface({
 		input: process.stdin,
@@ -60,16 +30,6 @@ async function readLine() {
 			});
 	})
 }
-// function doneLoading() {
-// 	return new Promise(() => {
-// 		observer = new MutationObserver( mutations => {
-// 			puppeteerMutationListener();
-// 			await page.waitForSelector('.checkout-step-action', {timeout: 3000})
-// 			await page.evaluate(() => {document.querySelector(".checkout-step-action .btn.btn-primary.checkout-step-action-done.layout-quarter").click()})
-//     });
-//     observer.observe(target, { childList: true });
-// 	})
-// }
 async function run () {
 	await report("Started")
 	const browser = await puppeteer.launch({
@@ -163,27 +123,6 @@ async function run () {
 			}
 		} catch (err) {
 			report(err)
-			// if (page.url().includes("ShoppingItem")) {
-			// 	// goes to shopping cart
-			// 	await page.goto('https://secure.newegg.com/Shopping/ShoppingCart.aspx', { waitUntil: 'load' })
-				
-			// 	// var check = await check_cart(page)
-			// 	// if (check){
-			// 	// 	break
-			// 	// }
-			// 	// const nextItem = await readLine();
-			// 	// if (nextItem == "n") {
-			// 	// 	continueTo = !continueTo
-			// 	// } else {
-			// 	// 	index++;
-			// 	// }
-			// 	break;
-			// } else {
-			// 	index++;
-			// 	report("error thrown");
-			// 	//page.dispose();
-			// 	continue
-			// }
 		}
 	}
 	await report ('checking out')
@@ -241,40 +180,6 @@ async function run () {
 		}
 		exit();
 	}
-	// try {
-	// 	//await page.goto('javascript:attachDelegateEvent((function(){Biz.GlobalShopping.ShoppingCart.checkOut(\'True\')}))', {timeout: 500})
-	// 	await page.waitForSelector('summary-actions')
-	// 	await page.click('summary-actions button[class=btn]')
-	// } catch (err) {
-	// }
-	
-// 	while (true) {
-// 		try {
-// 			await page.waitForSelector('#cvv2Code' , {timeout: 500})
-// 			await page.type('#cvv2Code', config.cv2)
-// 			break
-// 		} catch (err) {
-// 		}
-// 		try {
-// 			await page.waitForSelector('#creditCardCVV2' , {timeout: 500})
-// 			await page.type('#creditCardCVV2', config.cv2)
-// 			break
-// 		} catch (err) {
-// 		}
-// 	}
-
-// 	try {
-// 		await page.waitForSelector('#term' , {timeout: 5000})	
-// 		await page.click('#term')
-// 	} catch (err) {
-// 	}
-
-// 	if (config.auto_submit == 'true') {
-// 		await page.click('#SubmitOrder')
-// 	}
-// 	await report("Completed purchase")
-//     	//await browser.close()
-// }
-
 }
+
 run()
